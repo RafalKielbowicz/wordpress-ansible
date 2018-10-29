@@ -1,0 +1,9 @@
+---
+- hosts: wordpress_nodes
+  tasks:
+    - name: "Lets create hello world file"
+      file:
+        path: ~/HelloWorld
+        state: touch
+      
+      
