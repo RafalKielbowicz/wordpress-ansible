@@ -1,9 +1,34 @@
 ---
 - hosts: wordpress_nodes
+  become: yes
   tasks:
     - name: "Lets create hello world file"
       file:
         path: ~/HelloWorld
         state: touch
-      
-      
+    - name: "Install http server"
+      yum:
+        name: httpd
+        state: latest
+    - name: "install php module"
+      yum:
+        name: "{{item}}"
+        state: latest
+      with_items:
+        - php
+        - php-mysql
+    - name: "start httpd server"
+      service:
+        name: httpd
+        state: restarted
+    - name: "install db server"
+      yum:
+        name: "{{item}}"
+      with_items:
+        - mariadb
+        - mariadb-server
+    - service:
+        name: mariadb
+        state: started
+    
+     
