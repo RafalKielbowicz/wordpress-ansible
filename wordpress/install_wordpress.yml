@@ -2,13 +2,13 @@
 - hosts: wordpress_nodes
   become: yes
   vars:
-    wordpress_path: /var/www/wordpress/
-    database_name: rafi
+    wordpress_path: /var/www/rafi/
+    database_name: db_rafi
     database_user: user_rafi
     database_password: 'SuperStrongPasssword'
     wordpress_url: https://wordpress.org/latest.tar.gz
   tasks:
-    - name: "Install http server"
+    - name: "Install httpd server"
       yum:
         name: httpd
         state: latest
@@ -44,7 +44,6 @@
         src: "{{wordpress_url}}"
         dest: "{{wordpress_path}}"
         remote_src: yes
-        extra_opts: [--strip-components=1]
     - name: "create wordpress database"
       mysql_db:
         name: "{{database_name}}"
@@ -54,17 +53,11 @@
         name: "{{database_user}}"
         password: "{{database_password}}"
         priv: '*.*:ALL'
-    - name: "configure vhost"
+    - name: "configure vhosts"
       template:
-        src: ./templates/vhosts.conf
-        dest: /etc/httpd/conf.d/wordpress.conf
+        src: "./templates/vhosts.conf"
+        dest: "/etc/httpd/conf.d/wp.conf"
     - name: "configure wordpress"
       template:
-        src: ./templates/wordpress-config.php
-        dest: "{{wordpress_path}}/wordpress-config.php"
-
-
-
-
-
-
+        src: "./templates/wordpress-config.php"
+        dest: "{{wordpress_path}}/wp-config.php"
