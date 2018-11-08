@@ -1,15 +1,21 @@
 ---
 - hosts: wordpress_nodes
   become: yes
+  vars:
+    wordpress_path: /var/www/wordpress/
+    database_name: rafi
+    database_user: user_rafi
+    database_password: 'SuperStrongPasssword'
+    wordpress_url: https://wordpress.org/latest.tar.gz
   tasks:
-    - name: "Lets create hello world file"
-      file:
-        path: ~/HelloWorld
-        state: touch
     - name: "Install http server"
       yum:
         name: httpd
         state: latest
+    - name: "Restart httpd service"
+      service:
+        name: httpd
+        state: restarted
     - name: "install php module"
       yum:
         name: "{{item}}"
@@ -17,18 +23,48 @@
       with_items:
         - php
         - php-mysql
-    - name: "start httpd server"
-      service:
-        name: httpd
-        state: restarted
     - name: "install db server"
       yum:
         name: "{{item}}"
+        state: latest
       with_items:
         - mariadb
         - mariadb-server
-    - service:
+        - MySQL-python
+    - name: "restart mariadb"
+      service:
         name: mariadb
-        state: started
+        state: restarted
+    - name: "create directory for wordpress"
+      file:
+        path: "{{wordpress_path}}"
+        state: directory
+    - name: "download and install WordPress"
+      unarchive:
+        src: "{{wordpress_url}}"
+        dest: "{{wordpress_path}}"
+        remote_src: yes
+        extra_opts: [--strip-components=1]
+    - name: "create wordpress database"
+      mysql_db:
+        name: "{{database_name}}"
+        state: present
+    - name: "create wordpress database user"
+      mysql_user:
+        name: "{{database_user}}"
+        password: "{{database_password}}"
+        priv: '*.*:ALL'
+    - name: "configure vhost"
+      template:
+        src: ./templates/vhosts.conf
+        dest: /etc/httpd/conf.d/wordpress.conf
+    - name: "configure wordpress"
+      template:
+        src: ./templates/wordpress-config.php
+        dest: "{{wordpress_path}}/wordpress-config.php"
+
+
+
+
 
 
