@@ -2,10 +2,7 @@
 - hosts: wordpress_nodes
   become: yes
   vars:
-    # project_name: wp_raf
-    wordpress_path: /var/www/raf_wordpress/
-    database_name: db_raf_wordpress
-    database_user: user_raf
+    project_name: wp_raf
     database_password: "SuperStrongPasssword"
     wordpress_url: https://wordpress.org/latest.tar.gz
   tasks:
@@ -38,21 +35,21 @@
         state: restarted
     - name: "create directory for wordpress"
       file:
-        path: "{{wordpress_path}}"
+        path: "/var/www/{{project_name}}"
         state: directory
     - name: "download and install WordPress"
       unarchive:
         src: "{{wordpress_url}}"
-        dest: "{{wordpress_path}}"
+        dest: "/var/www/{{project_name}}"
         remote_src: yes
         extra_opts: [--strip-components=1]
     - name: "create wordpress database"
       mysql_db:
-        name: "{{database_name}}"
+        name: "{{project_name}}"
         state: present
     - name: "create wordpress database user"
       mysql_user:
-        name: "{{database_user}}"
+        name: "db_{{project_name}}"
         password: "{{database_password}}"
         priv: '*.*:ALL'
         state: present
@@ -63,7 +60,7 @@
     - name: "configure wordpress"
       template:
         src: ./templates/wp-config.php
-        dest: "{{wordpress_path}}/wp-config.php"
+        dest: "/var/www/{{project_name}}/wp-config.php"
     - name: "Reload httpd"
       service:
         name: httpd
